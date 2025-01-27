@@ -1,0 +1,131 @@
+Here are **formal properties and assertions** for verifying the behavior of the two independent Q-Channel interfaces in your HTU design. Each property ensures correct functionality based on the AMBA Q-Channel protocol requirements:
+
+---
+
+### **1. Request and Acknowledge Synchronization**
+**Property**: If `I_CLKQREQn` is asserted (low), the output `O_CLKQACCEPTn` or `O_CLKQDENY` must respond within a fixed number of cycles.
+```systemverilog
+property clkq_req_ack_sync;
+  @(posedge clk) disable iff (reset) 
+    (!I_CLKQREQn |=> (O_CLKQACCEPTn == 1'b0 || O_CLKQDENY == 1'b1) [*1:$]);
+endproperty
+a_clkq_req_ack_sync: assert property(clkq_req_ack_sync);
+```
+
+For the second interface:
+```systemverilog
+property pclkq_req_ack_sync;
+  @(posedge clk) disable iff (reset) 
+    (!I_PCLKQREQn |=> (O_PCLKQACCEPTn == 1'b0 || O_PCLKQDENY == 1'b1) [*1:$]);
+endproperty
+a_pclkq_req_ack_sync: assert property(pclkq_req_ack_sync);
+```
+
+---
+
+### **2. Acceptance and Denial are Mutually Exclusive**
+**Property**: `O_CLKQACCEPTn` and `O_CLKQDENY` cannot be asserted at the same time.
+```systemverilog
+property clkq_exclusive;
+  @(posedge clk) disable iff (reset)
+    !(O_CLKQACCEPTn == 1'b0 && O_CLKQDENY == 1'b1);
+endproperty
+a_clkq_exclusive: assert property(clkq_exclusive);
+```
+
+For the second interface:
+```systemverilog
+property pclkq_exclusive;
+  @(posedge clk) disable iff (reset)
+    !(O_PCLKQACCEPTn == 1'b0 && O_PCLKQDENY == 1'b1);
+endproperty
+a_pclkq_exclusive: assert property(pclkq_exclusive);
+```
+
+---
+
+### **3. Active Signal Behavior**
+**Property**: If the `O_CLKQACTIVE` signal is high, there should be no active request (`I_CLKQREQn` should be high).
+```systemverilog
+property clkq_active_behavior;
+  @(posedge clk) disable iff (reset)
+    (O_CLKQACTIVE == 1'b1 |-> I_CLKQREQn == 1'b1);
+endproperty
+a_clkq_active_behavior: assert property(clkq_active_behavior);
+```
+
+For the second interface:
+```systemverilog
+property pclkq_active_behavior;
+  @(posedge clk) disable iff (reset)
+    (O_PCLKQACTIVE == 1'b1 |-> I_PCLKQREQn == 1'b1);
+endproperty
+a_pclkq_active_behavior: assert property(pclkq_active_behavior);
+```
+
+---
+
+### **4. Response After Denial**
+**Property**: If `O_CLKQDENY` is asserted, `O_CLKQACTIVE` must not be asserted in the next cycle.
+```systemverilog
+property clkq_deny_no_active;
+  @(posedge clk) disable iff (reset)
+    (O_CLKQDENY == 1'b1 |=> O_CLKQACTIVE == 1'b0);
+endproperty
+a_clkq_deny_no_active: assert property(clkq_deny_no_active);
+```
+
+For the second interface:
+```systemverilog
+property pclkq_deny_no_active;
+  @(posedge clk) disable iff (reset)
+    (O_PCLKQDENY == 1'b1 |=> O_PCLKQACTIVE == 1'b0);
+endproperty
+a_pclkq_deny_no_active: assert property(pclkq_deny_no_active);
+```
+
+---
+
+### **5. Valid Active Signal Transition**
+**Property**: `O_CLKQACTIVE` should transition to 1 only after `O_CLKQACCEPTn` is deasserted.
+```systemverilog
+property clkq_valid_active_transition;
+  @(posedge clk) disable iff (reset)
+    (O_CLKQACTIVE == 1'b1 |-> O_CLKQACCEPTn == 1'b0);
+endproperty
+a_clkq_valid_active_transition: assert property(clkq_valid_active_transition);
+```
+
+For the second interface:
+```systemverilog
+property pclkq_valid_active_transition;
+  @(posedge clk) disable iff (reset)
+    (O_PCLKQACTIVE == 1'b1 |-> O_PCLKQACCEPTn == 1'b0);
+endproperty
+a_pclkq_valid_active_transition: assert property(pclkq_valid_active_transition);
+```
+
+---
+
+### **6. Deny Signal Behavior**
+**Property**: `O_CLKQDENY` should only be asserted if `I_CLKQREQn` was low in the previous cycle.
+```systemverilog
+property clkq_deny_behavior;
+  @(posedge clk) disable iff (reset)
+    (O_CLKQDENY == 1'b1 |-> $past(I_CLKQREQn) == 1'b0);
+endproperty
+a_clkq_deny_behavior: assert property(clkq_deny_behavior);
+```
+
+For the second interface:
+```systemverilog
+property pclkq_deny_behavior;
+  @(posedge clk) disable iff (reset)
+    (O_PCLKQDENY == 1'b1 |-> $past(I_PCLKQREQn) == 1'b0);
+endproperty
+a_pclkq_deny_behavior: assert property(pclkq_deny_behavior);
+```
+
+---
+
+These assertions focus on verifying the **protocol rules**, ensuring mutual exclusion, valid transitions, and proper synchronization between request, acknowledgment, and active states for the Q-Channel interfaces. Let me know if you want to cover more specific scenarios!
