@@ -1,138 +1,71 @@
-property sfr_wr_rd(fv_addr_val, fv_wdata, fv_rdata);
-logic [31:0] fv_sfr_wr; 
-@(posedge g_pclk)
-disable iff(!I_PRESET)
-//write
-HTU TOP SFR APBIF.ADDR == fv_addr_val 
-&& $rose(HTU TOP.SFR_APBIF.WR_REQO) 
-##0 (1'b1, fv_sfr_wr=fv_wdata)
-##1 HTU TOP.SFR APBIF.WR_ACKO
-[=1]
-// read
-## HTU TOP.SFR_APBIF ADDR=fv_addr_val 
-&& $rose(HTU_TOP.SFR_APBIF.RD_REQO)
-##1 HTU TOP.SER APBIF.RD_ACKO
-|->
-fv_rdata == fv str_wr
-;endproperty
+# **Case Study: Formal Verification of HTU**  
 
-I am done other formal verification of the HTU 
-Now I need to create a case study on how we approached HTU in formal verification
-
-First let's do it for the register data integrity check whose property I have given above I have typed it so ignore any syntax errors just focus on the intended functionality
-
-We had to do data integrity check for many sfrs in the htu
-So we wanted to do something like whenever write happens then again in future whenever read happens (not read immediately after write) the value should be the same 
-
-We did some iterations for doing this in the most efficient way
-We knew we had to use goto repetition operators
-1st we thought of using a simple goto [->n] operator 
-write [->1] ##1 read 
-But this would limit us
-As this methods says that read should come in the very next cycle after the write (but not that read can come anytime later after the write) 
-
-After realizing this we explored the nonconsecutive goto [=n] operator 
-write [=1] ##1 read
-And this was the perfect solution as this says after the write whenever later the read comes (not immediately) 
-
-So now we used a local property variable where we stored the value during the write and compared it to be same during the future read for the assertion passing condition
-
-
-THE ABOVE IS THE CONTENT THIS NEEDS TO BE PUT ON A CONFLUENCE PAGE AND EXPLAINED TO PROFESSIONALS SO GIVE ME THE PERFECT CONTENT AND YEA IT SHOULD BE LIKE HUMAN WRITTEN 
-
-
-
-# **Case Study: Register Data Integrity Check in HTU Formal Verification**  
-
-## **Introduction**  
-In the formal verification of the Hardware Throttling Unit (HTU), one of the key aspects we focused on was **register data integrity**. The goal was to ensure that once a value is written to a System Function Register (SFR), the same value is returned when read later, regardless of when the read happens.  
-
-To achieve this, we iterated over different approaches to implement an effective assertion using SystemVerilog Assertions (SVA). Below is a breakdown of our thought process, challenges faced, and the final optimized approach.  
+This case study presents our approach to formally verifying the Hardware Throttling Unit (HTU). We focused on two key aspects: **Counter Reduction and Abstraction** and **Register Data Integrity Check**.  
 
 ---
 
-## **Understanding the Requirement**  
-For multiple SFRs in the HTU, we needed to ensure that:  
-- Whenever a **write operation** occurs, the written value is stored.  
-- Whenever a **read operation** occurs at the same address in the future (not necessarily the next cycle), the returned value should match the stored value from the previous write.  
+## **1. Counter Reduction and Abstraction**  
 
-This meant that we needed an assertion that could handle cases where a read operation could happen after multiple cycles following a write, without enforcing an immediate read.  
+### **Challenge**  
+The HTU includes a **hysteresis filter** that adds hysteresis when the input goes low. A **25-bit counter** controls when the output is allowed to go low, based on a programmed threshold stored in an **SFR register**.  
 
----
+- The counter increments every clock cycle until it matches the SFR value.  
+- This creates **16,777,216 possible states**, which is too large for formal tools to exhaustively verify, leading to inconclusive results.  
+- While smaller values could be formally verified, this was insufficient for sign-off.  
 
-## **Approach & Iterations**  
+### **Solution: Counter Abstraction**  
+To **reduce state-space complexity**, we applied **counter abstraction**:  
 
-### **1st Attempt: Using Consecutive Goto Operator (`[->n]`)**  
-Initially, we considered using the **consecutive goto repetition operator**:  
+1. **Stop Points:**  
+   - We introduced **stopats** on:  
+     - The SFR holding the counter threshold.  
+     - The RTL counter, which increments every clock.  
 
-```
-write [->1] ##1 read  
-```
+2. **Key Assumptions:**  
+   - **SFR Coverage:** We used `$onehot(sfr)` to ensure that each of the 25 bits was tested as high at some point.  
+   - **Counter Behavior:** Instead of incrementing by 1 every cycle, we assumed:  
+     ```
+     counter == $past(counter) << 1
+     ```
+     This effectively **reduced sequential depth**, making verification feasible.  
 
-This means:  
-- A write happens.  
-- Exactly one cycle later, a read must occur.  
-
-**Why this approach failed?**  
-- It **forces** the read to happen in a fixed number of cycles after the write.  
-- In reality, a read could happen after many cycles, so this approach was **too restrictive**.  
-
----
-
-### **Final Approach: Using Non-Consecutive Goto Operator (`[=n]`)**  
-We then explored the **non-consecutive goto repetition operator**, which allows flexibility in the timing of the read:  
-
-```
-write [=1] ##1 read  
-```
-
-This means:  
-- A write happens.  
-- The read can happen **at any later cycle** but must return the same value.  
-
-**Why this approach worked?**  
-- It allows the **read operation to happen at any future cycle**, not just immediately after the write.  
-- Ensures **data integrity** without unnecessary constraints on read timing.  
+### **Outcome**  
+- The abstraction significantly improved formal convergence.  
+- The verification property ensured that when the counter reached the SFR value, the **primary output correctly responded** to the primary input.  
 
 ---
 
-## **Final Implementation Using a Local Property Variable**  
-To ensure correctness, we introduced a **local property variable** (`fv_sfr_wr`) to store the written value and verify it during the future read:  
+## **2. Register Data Integrity Check**  
 
-```systemverilog
-property sfr_wr_rd(fv_addr_val, fv_wdata, fv_rdata);  
-    logic [31:0] fv_sfr_wr;  
-    @(posedge g_pclk)  
-    disable iff (!I_PRESET)  
+### **Challenge**  
+We needed to verify that **SFR writes were correctly stored and read back later**, ensuring data integrity.  
 
-    // Write phase: Capture the written value  
-    HTU_TOP.SFR_APBIF.ADDR == fv_addr_val &&  
-    $rose(HTU_TOP.SFR_APBIF.WR_REQO)  
-    ##0 (1'b1, fv_sfr_wr = fv_wdata)  
-    ##1 HTU_TOP.SFR_APBIF.WR_ACKO [=1]  
+- A value written to an SFR must **persist** and match when read at any future cycle.  
+- The read could happen at **any arbitrary time after the write** (not necessarily the next cycle).  
 
-    // Read phase: Verify stored value matches read data  
-    ##HTU_TOP.SFR_APBIF.ADDR == fv_addr_val &&  
-    $rose(HTU_TOP.SFR_APBIF.RD_REQO)  
-    ##1 HTU_TOP.SFR_APBIF.RD_ACKO  
-    |-> fv_rdata == fv_sfr_wr;  
-endproperty  
-```
+### **Solution: Using Non-Consecutive Goto (`[=n]`)**  
 
-### **Explanation of the Property:**  
-- **Write Operation:**  
-  - When a write request (`WR_REQO`) occurs, the written data (`fv_wdata`) is stored in `fv_sfr_wr`.  
-  - The property waits for the write acknowledge (`WR_ACKO`).  
+1. **Initial Approach (Limitation)**  
+   - We first considered `write [->1] ##1 read`, enforcing a **strict one-cycle delay** between write and read.  
+   - **Issue:** This prevented checking for reads that occurred **much later** after the write.  
 
-- **Read Operation:**  
-  - Whenever in the future (`[=1]` ensures non-consecutive checking) a read request (`RD_REQO`) happens, it waits for the read acknowledge (`RD_ACKO`).  
-  - The read data (`fv_rdata`) must match the stored write value (`fv_sfr_wr`).  
+2. **Optimized Approach**  
+   - We used `write [=1] ##1 read`, which allows the read to occur **at any arbitrary future cycle** after the write.  
+   - To track correctness, we:  
+     - Stored the written value in a **local property variable**.  
+     - Ensured the **future read matched the stored value** for assertion success.  
+
+### **Outcome**  
+- Achieved a **flexible, robust data integrity check** for all SFRs.  
+- Improved **formal completeness** without unnecessary restrictions on read timing.  
 
 ---
 
-## **Key Takeaways**  
-- **Initial approach using `[->n]` failed** because it forced an immediate read, which was unrealistic.  
-- **Final approach using `[=1]` succeeded** as it allowed reads at any future cycle while maintaining data integrity.  
-- **Using a local variable (`fv_sfr_wr`)** ensured correct value comparison.  
+## **Conclusion**  
+By strategically applying **counter abstraction** and **optimized property writing**, we significantly enhanced the efficiency and completeness of HTU formal verification. These techniques ensured that:  
 
-This method provided an **efficient and flexible** way to verify SFR data integrity, ensuring correctness while maintaining a robust verification methodology.
+✅ **State-space complexity was reduced**, allowing exhaustive verification.  
+✅ **Data integrity was preserved** across multiple SFRs, regardless of when reads occurred.  
+✅ **Verification convergence improved**, leading to **conclusive results** for sign-off.  
+
+This structured approach provided a **scalable and efficient** formal verification methodology for HTU.
