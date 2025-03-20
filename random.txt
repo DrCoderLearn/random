@@ -1,47 +1,138 @@
-
-property if_pmic_ocp_warn_filter_low;
-	@(posedge I_OSCCLK)
-	disable iff(!I_OSCRESETn || I_TEST_MODE || w_OSCCLK_SFR_IF_PMIC_OCP_WARNFILTER_EXVAL)
-	!top.IF_PMIC_OCP_WARN_FILTER.nFLTEN
-	&& top.IF_PMIC_OCP_WARN_FILTER.FIL_IN
-	##2 !top.IF_PMIC_OCP_WARN_FILTER.FIL_IN [*2]
+property sfr_wr_rd(fv_addr_val, fv_wdata, fv_rdata);
+logic [31:0] fv_sfr_wr; 
+@(posedge g_pclk)
+disable iff(!I_PRESET)
+//write
+HTU TOP SFR APBIF.ADDR == fv_addr_val 
+&& $rose(HTU TOP.SFR_APBIF.WR_REQO) 
+##0 (1'b1, fv_sfr_wr=fv_wdata)
+##1 HTU TOP.SFR APBIF.WR_ACKO
+[=1]
+// read
+## HTU TOP.SFR_APBIF ADDR=fv_addr_val 
+&& $rose(HTU_TOP.SFR_APBIF.RD_REQO)
+##1 HTU TOP.SER APBIF.RD_ACKO
 |->
-	##[0:5] !top.IF_PMIC_OCP_WARN_FILTER.FIL_OUT
+fv_rdata == fv str_wr
 ;endproperty
-asrt_if_pmic_ocp_warn_filter_low: assert property(if_pmic_ocp_warn_filter_low);
 
-property delay_filter;
-	@(posedge I_OSCCLK)
-	disable iff(!I_OSCRESETn || I_TEST_MODE)
-	!top.IF_PMIC_OCP_WARN_FILTER.DELAY_FILTER_uo.nFLTEN
-|->
-	top.IF_PMIC_OCP_WARN_FILTER.DELAY_FILTER_uo.FIL_IN == top.IF_PMIC_OCP_WARN_FILTER.DELAY_FILTER_uo.FIL_OUT
-;endproperty
-asrt_delay_filter: assert property(delay_filter);
+I am done other formal verification of the HTU 
+Now I need to create a case study on how we approached HTU in formal verification
 
-property synchronizer_fil_in;
-	@(posedge I_OSCCLK)
-	disable iff(I_TEST_MODE)
-	!$isunknown(top.IF_PMIC_OCP_WARN_FILTER.HYSTERESIS_FILTER_u0.synchronizer_FIL_IN.D)
-	&& !$isunknown(top.IF_PMIC_OCP_WARN_FILTER.HYSTERESIS_FILTER_u0.HYS_FILTER.synchronizer_FIL_IN.Q)
-	&& !I_OSCRESETn
-	&& !w_OSCCLK_SFR_IF_PMIC_OCP_WARNFILTER_EXVAL
+First let's do it for the register data integrity check whose property I have given above I have typed it so ignore any syntax errors just focus on the intended functionality
 
-	##1 top.IF_PMIC_OCP_WARN_FILTER.HYSTERESIS_FILTER_u0.synchronizer_FIL_IN.D
-|->
-	##[0:5] top.IF_PMIC_OCP_WARN_FILTER.HYSTERESIS_FILTER_u0.synchronizer_FIL_IN.Q
-;endproperty
-asrt_synchronizer_fil_in: assert property(synchronizer_fil_in);
+We had to do data integrity check for many sfrs in the htu
+So we wanted to do something like whenever write happens then again in future whenever read happens (not read immediately after write) the value should be the same 
 
-property hysteresis_filter;
-	@(posedge I_OSCCLK)
-	disable iff(I_TEST_MODE)
-	!$isunknown(top.IF_PMIC_OCP_WARN_FILTER.HYSTERESIS_FILTER_u0.HYS_FILTER.PRIMARY_INPUT)
-	&& !$isunknown(top.IF_PMIC_OCP_WARN_FILTER.HYSTERESIS_FILTER_u0.HYS_FILTER.PRIMARY_OUTPUT)
-	&& !I_OSCRESETn
-	&& !w_OSCCLK_SFR_IF_PMIC_OCP_WARNFILTER_EXVAL
-|->
-	##1 top.IF_PMIC_OCP_WARN_FILTER.HYSTERESIS_FILTER_u0.HYS_FILTER.PRIMARY_INPUT == top.IF_PMIC_OCP_WARN_FILTER.HYSTERESIS_FILTER_u0.HYS_FILTER.PRIMARY_OUTPUT
-;endproperty
-asrt_hysteresis_filter: assert property(hysteresis_filter);
+We did some iterations for doing this in the most efficient way
+We knew we had to use goto repetition operators
+1st we thought of using a simple goto [->n] operator 
+write [->1] ##1 read 
+But this would limit us
+As this methods says that read should come in the very next cycle after the write (but not that read can come anytime later after the write) 
 
+After realizing this we explored the nonconsecutive goto [=n] operator 
+write [=1] ##1 read
+And this was the perfect solution as this says after the write whenever later the read comes (not immediately) 
+
+So now we used a local property variable where we stored the value during the write and compared it to be same during the future read for the assertion passing condition
+
+
+THE ABOVE IS THE CONTENT THIS NEEDS TO BE PUT ON A CONFLUENCE PAGE AND EXPLAINED TO PROFESSIONALS SO GIVE ME THE PERFECT CONTENT AND YEA IT SHOULD BE LIKE HUMAN WRITTEN 
+
+
+
+# **Case Study: Register Data Integrity Check in HTU Formal Verification**  
+
+## **Introduction**  
+In the formal verification of the Hardware Throttling Unit (HTU), one of the key aspects we focused on was **register data integrity**. The goal was to ensure that once a value is written to a System Function Register (SFR), the same value is returned when read later, regardless of when the read happens.  
+
+To achieve this, we iterated over different approaches to implement an effective assertion using SystemVerilog Assertions (SVA). Below is a breakdown of our thought process, challenges faced, and the final optimized approach.  
+
+---
+
+## **Understanding the Requirement**  
+For multiple SFRs in the HTU, we needed to ensure that:  
+- Whenever a **write operation** occurs, the written value is stored.  
+- Whenever a **read operation** occurs at the same address in the future (not necessarily the next cycle), the returned value should match the stored value from the previous write.  
+
+This meant that we needed an assertion that could handle cases where a read operation could happen after multiple cycles following a write, without enforcing an immediate read.  
+
+---
+
+## **Approach & Iterations**  
+
+### **1st Attempt: Using Consecutive Goto Operator (`[->n]`)**  
+Initially, we considered using the **consecutive goto repetition operator**:  
+
+```
+write [->1] ##1 read  
+```
+
+This means:  
+- A write happens.  
+- Exactly one cycle later, a read must occur.  
+
+**Why this approach failed?**  
+- It **forces** the read to happen in a fixed number of cycles after the write.  
+- In reality, a read could happen after many cycles, so this approach was **too restrictive**.  
+
+---
+
+### **Final Approach: Using Non-Consecutive Goto Operator (`[=n]`)**  
+We then explored the **non-consecutive goto repetition operator**, which allows flexibility in the timing of the read:  
+
+```
+write [=1] ##1 read  
+```
+
+This means:  
+- A write happens.  
+- The read can happen **at any later cycle** but must return the same value.  
+
+**Why this approach worked?**  
+- It allows the **read operation to happen at any future cycle**, not just immediately after the write.  
+- Ensures **data integrity** without unnecessary constraints on read timing.  
+
+---
+
+## **Final Implementation Using a Local Property Variable**  
+To ensure correctness, we introduced a **local property variable** (`fv_sfr_wr`) to store the written value and verify it during the future read:  
+
+```systemverilog
+property sfr_wr_rd(fv_addr_val, fv_wdata, fv_rdata);  
+    logic [31:0] fv_sfr_wr;  
+    @(posedge g_pclk)  
+    disable iff (!I_PRESET)  
+
+    // Write phase: Capture the written value  
+    HTU_TOP.SFR_APBIF.ADDR == fv_addr_val &&  
+    $rose(HTU_TOP.SFR_APBIF.WR_REQO)  
+    ##0 (1'b1, fv_sfr_wr = fv_wdata)  
+    ##1 HTU_TOP.SFR_APBIF.WR_ACKO [=1]  
+
+    // Read phase: Verify stored value matches read data  
+    ##HTU_TOP.SFR_APBIF.ADDR == fv_addr_val &&  
+    $rose(HTU_TOP.SFR_APBIF.RD_REQO)  
+    ##1 HTU_TOP.SFR_APBIF.RD_ACKO  
+    |-> fv_rdata == fv_sfr_wr;  
+endproperty  
+```
+
+### **Explanation of the Property:**  
+- **Write Operation:**  
+  - When a write request (`WR_REQO`) occurs, the written data (`fv_wdata`) is stored in `fv_sfr_wr`.  
+  - The property waits for the write acknowledge (`WR_ACKO`).  
+
+- **Read Operation:**  
+  - Whenever in the future (`[=1]` ensures non-consecutive checking) a read request (`RD_REQO`) happens, it waits for the read acknowledge (`RD_ACKO`).  
+  - The read data (`fv_rdata`) must match the stored write value (`fv_sfr_wr`).  
+
+---
+
+## **Key Takeaways**  
+- **Initial approach using `[->n]` failed** because it forced an immediate read, which was unrealistic.  
+- **Final approach using `[=1]` succeeded** as it allowed reads at any future cycle while maintaining data integrity.  
+- **Using a local variable (`fv_sfr_wr`)** ensured correct value comparison.  
+
+This method provided an **efficient and flexible** way to verify SFR data integrity, ensuring correctness while maintaining a robust verification methodology.
