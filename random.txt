@@ -1,3 +1,21 @@
+Here’s the refined version incorporating the style and structure of the reference paper:  
+
+---
+
+With the growing complexity of modern SoCs, verification has become a critical yet time-consuming phase in the design cycle. The increasing demand for high-performance, power-efficient, and functionally safe designs has led to a shift toward more efficient verification methodologies. Traditional simulation-based approaches, while effective, are often slow and struggle to provide exhaustive proof of correctness, especially in scenarios requiring deep state-space exploration. Formal Verification, on the other hand, offers a mathematically rigorous approach, enabling faster and more exhaustive validation.  
+
+However, despite its advantages, setting up a structured Formal testbench can be a tedious and error-prone process, requiring careful configuration of multiple signals, constraints, and assumptions. Similarly, writing assertions, assumptions, and coverage models manually is a time-intensive task that demands deep domain expertise.  
+
+This paper introduces two key innovations to streamline and automate Formal Verification:  
+
+1. **Automated Formal Testbench Generation** – A Python-based framework that takes key design inputs such as directory paths, clock/reset signals, and Verification IP (VIP) details, and automatically generates a structured Formal testbench. This eliminates the need for manual setup, ensuring consistency, scalability, and reduced bring-up time.  
+
+2. **AI-Powered Formal Property Generation** – A model that translates plain English property descriptions from an input spreadsheet into fully functional Formal checkers, including assertions, assumptions, and coverage directives. By automating this translation, we significantly reduce manual effort, minimize errors, and accelerate the verification process.  
+
+Compared to traditional simulation-based verification, our approach dramatically reduces testbench development time, ensures complete formal coverage, and enhances verification quality. With these advancements, Formal Verification becomes not just an alternative but a preferred solution for modern verification challenges.
+
+
+
 In this paper, we introduce two novel solutions to simplify Formal Verification:
 
 To begin with, we have built an automation framework based on Python that facilitates smooth generation of a Formal testbench with a defined structure. Based on some user-specified inputs like directory names, clock and reset signals, and Verification IP (VIP) information, the script configures the testbench automatically, performs the required bindings, and has a scalable and efficient environment in place for testing different design pieces, including protocols.
