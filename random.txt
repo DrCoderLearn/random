@@ -1,13 +1,1 @@
-### **Results and Conclusion**  
-
-#### **Results**  
-The implementation of automated formal testbench generation and AI-assisted checker creation has significantly improved the efficiency and accuracy of the verification process. By eliminating the need for manual testbench setup, the Python-based script ensures a standardized and error-free verification environment. The structured directory and file organization allow seamless integration with formal tools, reducing setup time and improving maintainability.  
-
-The AI-assisted checker generation has also demonstrated substantial time savings. Translating verification requirements from English descriptions to formal properties used to be a tedious and error-prone process. With the AI assistant, this step is now automated, ensuring correctness and completeness in the generated assertions, assumptions, and cover properties. This approach has not only minimized human effort but also enhanced the overall quality of verification.  
-
-From a verification closure perspective, this automation-driven methodology has led to a significant reduction in turnaround time. Engineers can now focus more on debugging and analysis rather than spending time on manual testbench creation and checker development. The structured and reusable framework also ensures that the same approach can be extended across multiple verification projects, making it a scalable solution for future needs.  
-
-#### **Conclusion**  
-The adoption of automation in formal verification has proven to be a game-changer. The combination of Python-based testbench generation and AI-driven checker development bridges the gap between manual processes and intelligent automation, significantly boosting verification productivity. By ensuring a well-structured, reusable, and scalable framework, this approach not only accelerates verification closure but also enhances overall design quality.  
-
-As verification complexity continues to rise, such automation-driven methodologies will become increasingly essential. This work demonstrates that leveraging scripting and AI technologies can lead to faster, more efficient, and more reliable formal verification, ultimately helping to achieve high-quality design verification within tighter project timelines.
+Second, we are suggesting an AI-driven method to automate Formal checkers development. Rather than manually writing assertions, assumptions, and coverage properties, verification engineers can submit an input spreadsheet in the form of high-level natural language property descriptions. The AI assistant will then transform the descriptions into complete, functional Formal checkers, which conserve human labor and enhance verification performance.
