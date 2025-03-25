@@ -1,31 +1,3 @@
-As this solution has been brought up as a generic solution to the problem statement, it can be extended to various designs seamlessly, ensuring scalability across different projects. Its flexibility allows adaptation to diverse verification requirements, making it a reusable and efficient approach for formal verification in multiple domains.
-
-Automation and AI-driven solutions address these challenges by streamlining the formal verification process. Automating testbench creation eliminates manual setup errors, ensures consistency, and reduces time spent on repetitive tasks. AI assistance in generating checkers from natural language descriptions simplifies property writing, making formal verification more accessible and efficient. By leveraging these technologies, verification teams can focus on refining design intent rather than spending excessive effort on setup and property development, ultimately improving coverage and accelerating verification closure.
-
-
-Traditional simulation-based verification faces challenges in covering all possible scenarios, leading to missed corner cases and longer debug cycles. Manually setting up a formal testbench and writing properties from scratch is time-consuming and requires expertise. To overcome these issues, we developed an automated framework that streamlines formal verification by generating structured testbenches and leveraging AI-assisted checker generation, ensuring efficiency and completeness with minimal effort.
-
-
-Here’s the **Introduction** section, structured similarly to the reference but tailored to our project:  
-
----
-
-### **Introduction**  
-
-Verification of complex digital designs is a challenging and time-intensive task, requiring exhaustive validation of various functional scenarios. Traditional simulation-based approaches rely on testbenches that require significant effort in stimulus generation, assertion writing, and coverage closure. While effective in many cases, these methods often struggle with deep corner-case analysis and scalability for large designs.  
-
-To address these challenges, Formal Verification has emerged as a powerful methodology that mathematically proves the correctness of properties, ensuring exhaustive verification without requiring directed test stimulus. However, setting up a structured Formal testbench manually can be tedious, and writing assertions for large-scale designs is often an overwhelming task.  
-
-To streamline this process, we introduce a **Python-based automated Formal testbench generation framework** that eliminates manual setup efforts. By simply providing key inputs such as directory paths, clock/reset signals, and Verification IP (VIP) details, the framework generates a ready-to-use testbench, ensuring faster bring-up and reducing human errors.  
-
-Additionally, we leverage **AI-assisted Formal property generation** to further simplify assertion writing. Instead of manually coding complex SystemVerilog assertions, engineers write high-level property descriptions in natural language within an Excel sheet. An AI assistant then translates these descriptions into fully functional Formal checkers, including assertions, assumptions, and coverage directives.  
-
-This approach not only enhances efficiency but also ensures completeness in verification, making Formal methodologies more accessible and scalable for complex design verification challenges. By automating testbench creation and assertion generation, we significantly reduce development time while improving verification quality compared to traditional simulation-based flows.
-
-
-
-
-
 ### **Key Benefits**  
 
 Adopting our automated Formal testbench generation and AI-assisted checker creation provides several advantages over traditional verification methodologies:  
