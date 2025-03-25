@@ -1,3 +1,6 @@
+Automation and AI-driven solutions address these challenges by streamlining the formal verification process. Automating testbench creation eliminates manual setup errors, ensures consistency, and reduces time spent on repetitive tasks. AI assistance in generating checkers from natural language descriptions simplifies property writing, making formal verification more accessible and efficient. By leveraging these technologies, verification teams can focus on refining design intent rather than spending excessive effort on setup and property development, ultimately improving coverage and accelerating verification closure.
+
+
 Traditional simulation-based verification faces challenges in covering all possible scenarios, leading to missed corner cases and longer debug cycles. Manually setting up a formal testbench and writing properties from scratch is time-consuming and requires expertise. To overcome these issues, we developed an automated framework that streamlines formal verification by generating structured testbenches and leveraging AI-assisted checker generation, ensuring efficiency and completeness with minimal effort.
 
 
