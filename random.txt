@@ -1,3 +1,6 @@
+Traditional simulation-based verification faces challenges in covering all possible scenarios, leading to missed corner cases and longer debug cycles. Manually setting up a formal testbench and writing properties from scratch is time-consuming and requires expertise. To overcome these issues, we developed an automated framework that streamlines formal verification by generating structured testbenches and leveraging AI-assisted checker generation, ensuring efficiency and completeness with minimal effort.
+
+
 Here’s the **Introduction** section, structured similarly to the reference but tailored to our project:  
 
 ---
