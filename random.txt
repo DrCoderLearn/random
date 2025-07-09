@@ -1,1 +1,63 @@
-HTU is a control-centric block with no data transformation, making it highly amenable to formal verification. Its low sequential depth ensures that formal engines can efficiently explore all possible states, enabling exhaustive verification. This characteristic eliminates the need for extensive stimulus generation and simplifies convergence, making formal the ideal choice for ensuring correctness and robustness in HTU’s functionality.
+module maze_controller (
+    input logic clk,
+    input logic rst_n,
+
+    // Move control from testbench
+    input logic move_up,
+    input logic move_down,
+    input logic move_left,
+    input logic move_right,
+
+    // Outputs
+    output logic [3:0] curr_x,
+    output logic [3:0] curr_y,
+    output logic valid_move,
+    output logic reached_end
+);
+
+    // 10x10 Maze definition (1 = path, 0 = wall)
+    logic [0:9][0:9] maze = '{
+        '{1,0,1,1,1,1,0,1,0,1},
+        '{1,1,0,0,0,1,1,1,1,0},
+        '{0,1,1,0,1,0,0,0,1,1},
+        '{1,0,1,0,1,1,1,0,0,0},
+        '{1,0,1,1,1,0,1,1,1,1},
+        '{1,0,0,0,1,0,0,0,0,1},
+        '{1,1,1,1,1,1,1,1,0,1},
+        '{0,0,0,0,0,0,1,0,0,1},
+        '{1,1,1,1,1,0,1,1,1,1},
+        '{0,0,0,0,1,0,0,0,0,1}
+    };
+
+    logic [3:0] x, y;
+
+    // Output assignments
+    assign curr_x = x;
+    assign curr_y = y;
+    assign reached_end = (x == 4'd9 && y == 4'd9);
+
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            x <= 4'd0;
+            y <= 4'd0;
+            valid_move <= 1'b1;
+        end else begin
+            valid_move <= 1'b0;
+
+            // Move logic
+            if (move_up && y > 0 && maze[y-1][x]) begin
+                y <= y - 1;
+                valid_move <= 1'b1;
+            end else if (move_down && y < 9 && maze[y+1][x]) begin
+                y <= y + 1;
+                valid_move <= 1'b1;
+            end else if (move_left && x > 0 && maze[y][x-1]) begin
+                x <= x - 1;
+                valid_move <= 1'b1;
+            end else if (move_right && x < 9 && maze[y][x+1]) begin
+                x <= x + 1;
+                valid_move <= 1'b1;
+            end
+        end
+    end
+endmodule
