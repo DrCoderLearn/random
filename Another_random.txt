@@ -1,0 +1,19 @@
+// Assumption: All 16 SFRs must have unique values at any time
+
+assume property (@(posedge clk) disable iff (!reset)
+    (sfr1 != sfr2) &&
+    (sfr1 != sfr3) && (sfr2 != sfr3) &&
+    (sfr1 != sfr4) && (sfr2 != sfr4) && (sfr3 != sfr4) &&
+    (sfr1 != sfr5) && (sfr2 != sfr5) && (sfr3 != sfr5) && (sfr4 != sfr5) &&
+    (sfr1 != sfr6) && (sfr2 != sfr6) && (sfr3 != sfr6) && (sfr4 != sfr6) && (sfr5 != sfr6) &&
+    (sfr1 != sfr7) && (sfr2 != sfr7) && (sfr3 != sfr7) && (sfr4 != sfr7) && (sfr5 != sfr7) && (sfr6 != sfr7) &&
+    (sfr1 != sfr8) && (sfr2 != sfr8) && (sfr3 != sfr8) && (sfr4 != sfr8) && (sfr5 != sfr8) && (sfr6 != sfr8) && (sfr7 != sfr8) &&
+    (sfr1 != sfr9) && (sfr2 != sfr9) && (sfr3 != sfr9) && (sfr4 != sfr9) && (sfr5 != sfr9) && (sfr6 != sfr9) && (sfr7 != sfr9) && (sfr8 != sfr9) &&
+    (sfr1 != sfr10) && (sfr2 != sfr10) && (sfr3 != sfr10) && (sfr4 != sfr10) && (sfr5 != sfr10) && (sfr6 != sfr10) && (sfr7 != sfr10) && (sfr8 != sfr10) && (sfr9 != sfr10) &&
+    (sfr1 != sfr11) && (sfr2 != sfr11) && (sfr3 != sfr11) && (sfr4 != sfr11) && (sfr5 != sfr11) && (sfr6 != sfr11) && (sfr7 != sfr11) && (sfr8 != sfr11) && (sfr9 != sfr11) && (sfr10 != sfr11) &&
+    (sfr1 != sfr12) && (sfr2 != sfr12) && (sfr3 != sfr12) && (sfr4 != sfr12) && (sfr5 != sfr12) && (sfr6 != sfr12) && (sfr7 != sfr12) && (sfr8 != sfr12) && (sfr9 != sfr12) && (sfr10 != sfr12) && (sfr11 != sfr12) &&
+    (sfr1 != sfr13) && (sfr2 != sfr13) && (sfr3 != sfr13) && (sfr4 != sfr13) && (sfr5 != sfr13) && (sfr6 != sfr13) && (sfr7 != sfr13) && (sfr8 != sfr13) && (sfr9 != sfr13) && (sfr10 != sfr13) && (sfr11 != sfr13) && (sfr12 != sfr13) &&
+    (sfr1 != sfr14) && (sfr2 != sfr14) && (sfr3 != sfr14) && (sfr4 != sfr14) && (sfr5 != sfr14) && (sfr6 != sfr14) && (sfr7 != sfr14) && (sfr8 != sfr14) && (sfr9 != sfr14) && (sfr10 != sfr14) && (sfr11 != sfr14) && (sfr12 != sfr14) && (sfr13 != sfr14) &&
+    (sfr1 != sfr15) && (sfr2 != sfr15) && (sfr3 != sfr15) && (sfr4 != sfr15) && (sfr5 != sfr15) && (sfr6 != sfr15) && (sfr7 != sfr15) && (sfr8 != sfr15) && (sfr9 != sfr15) && (sfr10 != sfr15) && (sfr11 != sfr15) && (sfr12 != sfr15) && (sfr13 != sfr15) && (sfr14 != sfr15) &&
+    (sfr1 != sfr16) && (sfr2 != sfr16) && (sfr3 != sfr16) && (sfr4 != sfr16) && (sfr5 != sfr16) && (sfr6 != sfr16) && (sfr7 != sfr16) && (sfr8 != sfr16) && (sfr9 != sfr16) && (sfr10 != sfr16) && (sfr11 != sfr16) && (sfr12 != sfr16) && (sfr13 != sfr16) && (sfr14 != sfr16) && (sfr15 != sfr16)
+);
